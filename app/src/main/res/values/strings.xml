@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GithubHilt</string>
+    <string name="go_to"><u>Goto Github</u></string>
+</resources>
