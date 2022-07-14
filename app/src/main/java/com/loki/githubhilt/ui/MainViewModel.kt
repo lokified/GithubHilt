@@ -1,11 +1,14 @@
 package com.loki.githubhilt.ui
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import com.loki.githubhilt.data.domain.Repository
 import com.loki.githubhilt.data.model.Repos
 import com.loki.githubhilt.data.model.Users
+import com.loki.githubhilt.data.model.responses.UserResponse
+import com.loki.githubhilt.util.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -13,15 +16,23 @@ class MainViewModel @Inject constructor(
     private val repository: Repository
 ): ViewModel() {
 
-    private var userList: MutableLiveData<List<Users>> = MutableLiveData()
+    private val mErrorText = MutableLiveData<Event<String>>()
+    val errorText : LiveData<Event<String>> = mErrorText
 
-    fun getLiveDataObserver(): MutableLiveData<List<Users>> {
+    fun loadUsers(searchTerm: String): LiveData<List<Users>?> {
 
-        return userList
-    }
+        val users = MutableLiveData<List<Users>?>()
 
-    fun loadUsers(user:  String) {
+        viewModelScope.launch {
 
-        repository.getUsers(user, liveData = userList)
+            val userResponse = repository.getUsers(searchTerm) { mErrorText.postValue(Event(it)) }
+
+            val userList = userResponse?.results
+
+            users.postValue(userList)
+
+        }
+
+        return users
     }
 }

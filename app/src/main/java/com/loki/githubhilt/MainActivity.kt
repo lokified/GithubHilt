@@ -5,11 +5,11 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.loki.githubhilt.databinding.ActivityMainBinding
 import com.loki.githubhilt.ui.MainViewModel
 import com.loki.githubhilt.ui.UserAdapter
+import com.loki.githubhilt.util.EventObserver
 import com.loki.githubhilt.util.SharedPreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -27,7 +27,8 @@ class MainActivity : AppCompatActivity() {
 
         initRecycler()
 
-        viewModel.loadUsers(getRecentSearch())
+
+        loadUsers(getRecentSearch())
 
         binding.searchUser.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
 
@@ -37,30 +38,36 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(query: String?): Boolean {
 
-                viewModel.loadUsers(query!!)
-                SharedPreferenceManager.savePreviousSearch(this@MainActivity, query)
+                if (query.isNullOrEmpty()) {
+
+                    loadUsers(getRecentSearch())
+                }
+                else {
+                    SharedPreferenceManager.savePreviousSearch(this@MainActivity, query)
+
+                    loadUsers(query)
+                }
 
                 return true
             }
         })
 
 
-        loadUsersList()
+        viewModel.errorText.observe(this, EventObserver {
+
+            Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+        })
+
         viewModel
     }
 
-    private fun loadUsersList() {
+    private fun loadUsers(query: String?) {
 
-        viewModel.getLiveDataObserver().observe(this, Observer {
+        val users = viewModel.loadUsers(query!!)
 
-            if (it == null) {
-                viewModel.loadUsers(getRecentSearch())
-            }
-            else {
-                adapter.setRepoList(it)
-            }
-
-        })
+        users.observe(this@MainActivity) { list ->
+            adapter.setRepoList(list!!)
+        }
     }
 
 

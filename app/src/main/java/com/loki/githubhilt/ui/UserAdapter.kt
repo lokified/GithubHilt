@@ -25,7 +25,7 @@ class UserAdapter: RecyclerView.Adapter<UserAdapter.UserViewHolder>() {
 
         holder.binding.tvGoTo.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.setData(Uri.parse(userList[position].html_url))
+            intent.data = Uri.parse(userList[position].html_url)
             holder.itemView.context.startActivity(intent)
         }
     }
